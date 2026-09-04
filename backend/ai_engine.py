@@ -9,7 +9,6 @@ load_dotenv()
 # Configure the Gemini SDK
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# 1. Define the Strict Invariants (The Guardrails)
 class DiagnosisClass(str, Enum):
     NETWORK_DROP = "NETWORK_DROP"
     INSUFFICIENT_FUNDS = "INSUFFICIENT_FUNDS"
@@ -17,7 +16,7 @@ class DiagnosisClass(str, Enum):
     INVALID_CARD_DETAILS = "INVALID_CARD_DETAILS"
     REQUIRES_HUMAN = "REQUIRES_HUMAN"
 
-# 2. Define the exact JSON shape the LLM must return
+# Define the exact JSON shape the LLM must return
 class PaymentDiagnosis(BaseModel):
     diagnosis_class: DiagnosisClass
     confidence_score: float
@@ -52,7 +51,7 @@ def diagnose_failure(error_code: str, error_description: str, metadata: dict) ->
                 )
             )
             
-            # --- NEW FIX: Clean the response text of markdown formatting ---
+        
             raw_text = response.text.strip()
             if raw_text.startswith("```json"):
                 raw_text = raw_text[7:]
