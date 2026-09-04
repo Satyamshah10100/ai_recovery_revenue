@@ -26,15 +26,15 @@ headers = {
     "Content-Type": "application/json"
 }
 
-print("🚀 Firing First Webhook (Simulating Razorpay)...")
+print(" Firing First Webhook (Simulating Razorpay)...")
 response_1 = requests.post(WEBHOOK_URL, json=payload, headers=headers)
 print(f"Response: {response_1.status_code} - {response_1.json()}")
 
-print("\n⏳ Waiting 5 seconds to let the AI process it...")
+print("\n Waiting 5 seconds to let the AI process it...")
 time.sleep(5)
 
-print("\n🔥 Firing Duplicate Webhook (Simulating a Network Retry Glitch)...")
+print("\n Firing Duplicate Webhook (Simulating a Network Retry Glitch)...")
 response_2 = requests.post(WEBHOOK_URL, json=payload, headers=headers)
 print(f"Response: {response_2.status_code} - {response_2.json()}")
 
-print("\n✅ Check your Uvicorn server terminal to see the AI and Database in action!")
+print("\n Check your Uvicorn server terminal to see the AI and Database in action!")
