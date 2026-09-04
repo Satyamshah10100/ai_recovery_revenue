@@ -9,17 +9,16 @@ from ai_engine import diagnose_failure, DiagnosisClass
 
 load_dotenv()
 
-# 1. Initialize Supabase
+# Initialize Supabase
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI(title="Razorpay AI Recovery Layer")
 
-# --- THE CORE FINTECH WORKFLOW ---
+
 def process_failed_payment(event_id: str, payload: dict):
     # For testing, we use the mock transaction ID we inserted into Supabase earlier.
-    # In production, you would map the Razorpay order_id from the payload to your DB.
     test_tx_id = "550e8400-e29b-41d4-a716-446655440000" 
     
     # Safely extract error details from the complex Razorpay payload
@@ -43,13 +42,13 @@ def process_failed_payment(event_id: str, payload: dict):
     except Exception as e:
         # Supabase/PostgreSQL throws error 23505 on unique constraint violations
         if "23505" in str(e) or "duplicate key" in str(e):
-            print(f"🛑 [Idempotency Lock] Duplicate webhook {event_id} rejected.")
+            print(f" [Idempotency Lock] Duplicate webhook {event_id} rejected.")
             return
         print(f"Database error: {e}")
         return
 
     # --- GUARDRAIL 2: BOUNDED AI DIAGNOSIS ---
-    print(f"🧠 Running AI Diagnosis on {error_code}...")
+    print(f" Running AI Diagnosis on {error_code}...")
     diagnosis = diagnose_failure(error_code, error_desc, payload)
     print(f"   -> AI Result: {diagnosis.diagnosis_class.value} (Confidence: {diagnosis.confidence_score})")
     
@@ -61,7 +60,7 @@ def process_failed_payment(event_id: str, payload: dict):
     elif diagnosis.diagnosis_class == DiagnosisClass.INSUFFICIENT_FUNDS:
         action = "SEND_PAYMENT_LINK"
         
-    print(f"⚙️ Deterministic Policy Decision: {action}")
+    print(f" Deterministic Policy Decision: {action}")
         
     # --- GUARDRAIL 4: THE DOUBLE-CHARGE SAFETY LOCK ---
     try:
@@ -74,8 +73,8 @@ def process_failed_payment(event_id: str, payload: dict):
             "execution_status": "EXECUTED" if action != "MANUAL_REVIEW" else "PENDING_REVIEW"
         }).execute()
         
-        print(f"✅ Successfully locked and executed action: {action} for transaction {test_tx_id}\n")
-        # In a real app, you would call Razorpay.retry() or send the email here!
+        print(f" Successfully locked and executed action: {action} for transaction {test_tx_id}\n")
+
         
     except Exception as e:
         if "23505" in str(e) or "duplicate key" in str(e):
@@ -83,7 +82,7 @@ def process_failed_payment(event_id: str, payload: dict):
         else:
             print(f"Failed to acquire lock: {e}")
 
-# --- ENDPOINTS ---
+# ENDPOINTS 
 @app.get("/")
 def health_check():
     return {"status": "healthy"}
