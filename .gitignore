@@ -1,0 +1,14 @@
+# Python
+backend/venv/
+backend/__pycache__/
+*.pyc
+
+# Node / Vite
+frontend/node_modules/
+frontend/dist/
+*.local
+
+# Environment & Secrets (NEVER COMMIT THESE)
+*.env
+.env
+.env.*
