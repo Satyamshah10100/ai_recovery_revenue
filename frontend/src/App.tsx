@@ -7,7 +7,7 @@ export default function App() {
   useEffect(() => {
     fetchData()
     
-    // Optional: Set up an interval to poll for new data every 5 seconds
+    // Set up an interval to poll for new data every 5 seconds
     const interval = setInterval(fetchData, 5000)
     return () => clearInterval(interval)
   }, [])
