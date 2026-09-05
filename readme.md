@@ -4,6 +4,9 @@
 SentinelPay is an enterprise-grade payment failure recovery engine. It intercepts payment failure webhooks, bounds an LLM (Gemini 1.5) to diagnose the root cause with strict type safety, and uses data-driven deterministic policies to safely recover failed payments or escalate to operators.
 
 ---
+<img width="904" height="318" alt="image" src="https://github.com/user-attachments/assets/a0210ad7-2433-4f17-aeef-da2bfbaff6dd" />
+<img width="1528" height="227" alt="image" src="https://github.com/user-attachments/assets/657d9336-020e-40f0-8a2d-99252481b09f" />
+
 
 ## System Architecture
 
