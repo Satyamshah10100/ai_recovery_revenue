@@ -1,11 +1,11 @@
 #  SentinelPay: AI-Driven Revenue Recovery Layer
 > Built for the Razorpay AI Buildathon — **Track 3: AI Revenue Recovery**
 
-SentinelPay is an enterprise-grade payment failure recovery engine. It intercepts payment failure webhooks, bounds an LLM (Gemini 1.5) to diagnose the root cause with strict type safety, and uses database-level idempotency locks to eliminate the risk of duplicate customer charges.
+SentinelPay is an enterprise-grade payment failure recovery engine. It intercepts payment failure webhooks, bounds an LLM (Gemini 1.5) to diagnose the root cause with strict type safety, and uses data-driven deterministic policies to safely recover failed payments or escalate to operators.
 
 ---
 
-##  System Architecture
+## System Architecture
 
 ```mermaid
 flowchart TD
@@ -23,23 +23,29 @@ flowchart TD
     J -->|SEND_PAYMENT_LINK| L[Dispatch Alternate Invoice Link]
     J -->|MANUAL_REVIEW| M[Escalate to Operator Console]
     C -.->|Real-Time Stream| N[React Operator Dashboard]
- Core Engineering Guardrails
+```
+
+## Core Engineering Guardrails
+
 1. Bounded AI (Hallucination Prevention)
-The LLM has zero direct execution permissions over financial actions:
 
-Strict Type Safety: The LLM is constrained via Pydantic schemas to return a closed enum: [NETWORK_DROP, INSUFFICIENT_FUNDS, SUSPECTED_FRAUD, INVALID_CARD_DETAILS, REQUIRES_HUMAN].
+The LLM has zero direct execution permissions over financial actions.
 
-Safe Fallback: Any schema validation failure or unhandled exception immediately degrades to REQUIRES_HUMAN with a 0.0 confidence score, routing the event to an operator review queue rather than halting execution.
+- Strict Type Safety: The LLM is constrained via Pydantic schemas to return a closed enum: [NETWORK_DROP, INSUFFICIENT_FUNDS, SUSPECTED_FRAUD, INVALID_CARD_DETAILS, REQUIRES_HUMAN].
+
+- Safe Fallback: Any schema validation failure or unhandled exception immediately degrades to REQUIRES_HUMAN with a 0.0 confidence score, routing the event to an operator review queue rather than halting automated processing.
 
 2. At-Most-Once Execution (Database-Level Idempotency)
-Ingestion Lock: webhook_event_id VARCHAR(255) UNIQUE blocks duplicate webhooks from retried network delivery.
 
-Execution Lock: Composite unique constraint CONSTRAINT unique_recovery_action UNIQUE (transaction_id, action_taken) physically guarantees that a recovery action (e.g., SMART_RETRY) cannot run more than once per transaction.
+- Ingestion Lock: webhook_event_id VARCHAR(255) UNIQUE blocks duplicate webhooks from retried network delivery.
 
- Database Setup & Explanation
+- Execution Lock: Composite unique constraint CONSTRAINT unique_recovery_action UNIQUE (transaction_id, action_taken) physically guarantees that a recovery action (e.g., SMART_RETRY) cannot run more than once for the same transaction/action combination.
+
+## Database Setup & Explanation
+
 The PostgreSQL database (Supabase) enforces transactional consistency. Run this SQL in your Supabase SQL Editor:
 
-SQL
+```sql
 -- 1. Original payment intents
 CREATE TABLE transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -79,23 +85,34 @@ CREATE TABLE recovery_attempts (
 INSERT INTO transactions (id, merchant_reference, amount, currency, status)
 VALUES ('550e8400-e29b-41d4-a716-446655440000', 'ORDER_TEST_123', 999.00, 'INR', 'FAILED')
 ON CONFLICT DO NOTHING;
- Run Commands & Verification
+```
+
+## Run Commands & Verification
+
 1. Start the Backend API
 
+```bash
 cd backend
 .\venv\Scripts\activate   # Windows
 # source venv/bin/activate # Mac/Linux
 uvicorn main:app --reload
+```
+
 2. Start the Operator Console
 
+```bash
 cd frontend
 npm run dev
+```
+
 Open http://localhost:5173/ in your browser.
 
 3. Run the Chaos & Verification Script
+
 Simulate a payment failure and verify the idempotency lock:
 
-
+```bash
 cd backend
 .\venv\Scripts\activate
 python test_webhook.py
+```
